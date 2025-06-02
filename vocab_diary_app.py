@@ -15,7 +15,7 @@ if "word_history" not in st.session_state:
 def fetch_word_details(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     response = requests.get(url)
-    dictionary_link = f"https://www.lexico.com/en/definition/{word}"
+    dictionary_link = f"https://www.merriam-webster.com/dictionary/{word}"
 
     if response.status_code != 200:
         return {
