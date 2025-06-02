@@ -53,16 +53,19 @@ def fetch_word_details(word):
         "Audio URL": audio_url
     }
 
-def create_word_document(df):
+def create_word_document(df, include_definition, include_example, include_ipa, include_audio):
     doc = Document()
     doc.add_heading('Vocabulary Diary', 0)
 
     for index, row in df.iterrows():
         doc.add_heading(row['Word'], level=1)
-        doc.add_paragraph(f"Definition: {row['Definition']}")
-        doc.add_paragraph(f"Example Sentence: {row['Example Sentence']}")
-        doc.add_paragraph(f"IPA: {row['IPA']}")
-        if row['Audio URL']:
+        if include_definition:
+            doc.add_paragraph(f"Definition: {row['Definition']}")
+        if include_example:
+            doc.add_paragraph(f"Example Sentence: {row['Example Sentence']}")
+        if include_ipa:
+            doc.add_paragraph(f"IPA: {row['IPA']}")
+        if include_audio and row['Audio URL']:
             doc.add_paragraph(f"Audio URL: {row['Audio URL']}")
 
     byte_io = BytesIO()
@@ -73,6 +76,13 @@ def create_word_document(df):
 @st.cache_data
 def fetch_word_details_cached(word):
     return fetch_word_details(word)
+
+# Sidebar for toggling sections
+st.sidebar.title("Settings")
+include_definition = st.sidebar.checkbox("Include Definition", value=True)
+include_example = st.sidebar.checkbox("Include Example Sentence", value=True)
+include_ipa = st.sidebar.checkbox("Include IPA", value=True)
+include_audio = st.sidebar.checkbox("Include Audio URL", value=True)
 
 # Input area
 words_input = st.text_area("Enter words (comma, space, or new line separated):")
@@ -89,9 +99,13 @@ if st.button("Fetch Word Details"):
 
     if word_details:
         df = pd.DataFrame(word_details)
+        
+        # Make audio links clickable
         df["Audio URL"] = df["Audio URL"].apply(
             lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
         )
+
+        # Display the table with clickable links
         st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("✅ Words fetched successfully!")
 
@@ -101,10 +115,12 @@ if st.session_state.word_history:
 
     for i, word_data in enumerate(st.session_state.word_history):
         st.markdown(f"### {word_data['Word']}")
-        new_def = st.text_area(f"Definition for {word_data['Word']}", word_data['Definition'], key=f"def_{i}")
-        new_ex = st.text_area(f"Example for {word_data['Word']}", word_data['Example Sentence'], key=f"ex_{i}")
-        st.session_state.word_history[i]['Definition'] = new_def
-        st.session_state.word_history[i]['Example Sentence'] = new_ex
+        if include_definition:
+            new_def = st.text_area(f"Definition for {word_data['Word']}", word_data['Definition'], key=f"def_{i}")
+            st.session_state.word_history[i]['Definition'] = new_def
+        if include_example:
+            new_ex = st.text_area(f"Example for {word_data['Word']}", word_data['Example Sentence'], key=f"ex_{i}")
+            st.session_state.word_history[i]['Example Sentence'] = new_ex
 
     # Download buttons
     df_history = pd.DataFrame(st.session_state.word_history)
@@ -115,12 +131,12 @@ if st.session_state.word_history:
 
     st.download_button(
         label="Download History as CSV",
-        data=pd.DataFrame(st.session_state.word_history).to_csv(index=False),
+        data=df_history.to_csv(index=False),
         file_name='vocabulary_history.csv',
         mime='text/csv'
     )
 
-    word_doc = create_word_document(pd.DataFrame(st.session_state.word_history))
+    word_doc = create_word_document(df_history, include_definition, include_example, include_ipa, include_audio)
     st.download_button(
         label="Download History as Word Document",
         data=word_doc,
