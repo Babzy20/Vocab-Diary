@@ -6,8 +6,11 @@ from io import BytesIO
 
 # Enable wide layout
 st.set_page_config(layout="wide")
-
 st.title("Vocabulary Diary")
+
+# Initialize session state for word history
+if "word_history" not in st.session_state:
+    st.session_state.word_history = []
 
 def fetch_word_details(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
@@ -64,11 +67,12 @@ def create_word_document(df):
     byte_io.seek(0)
     return byte_io
 
-words_input = st.text_area("Enter words (comma, space, or new line separated):")
-
 @st.cache_data
 def fetch_word_details_cached(word):
     return fetch_word_details(word)
+
+# Input area
+words_input = st.text_area("Enter words (comma, space, or new line separated):")
 
 if st.button("Fetch Word Details"):
     words = [word.strip() for word in words_input.replace(',', ' ').split()]
@@ -78,34 +82,49 @@ if st.button("Fetch Word Details"):
         details = fetch_word_details_cached(word)
         if details:
             word_details.append(details)
+            st.session_state.word_history.append(details)
 
     if word_details:
         df = pd.DataFrame(word_details)
-
-        # Make audio links clickable
         df["Audio URL"] = df["Audio URL"].apply(
             lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
         )
-
-        # Display the table with clickable links
         st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("✅ Words fetched successfully!")
 
-        # CSV download button
-        st.download_button(
-            label="Download as CSV",
-            data=pd.DataFrame(word_details).to_csv(index=False),
-            file_name='vocabulary_diary.csv',
-            mime='text/csv'
-        )
+# Editable word history
+if st.session_state.word_history:
+    st.subheader("📜 Word History (Editable)")
 
-        # Word document download button
-        word_doc = create_word_document(pd.DataFrame(word_details))
-        st.download_button(
-            label="Download as Word Document",
-            data=word_doc,
-            file_name='vocabulary_diary.docx',
-            mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-    else:
-        st.warning("⚠️ No word details found. Please check your input.")
+    for i, word_data in enumerate(st.session_state.word_history):
+        st.markdown(f"### {word_data['Word']}")
+        new_def = st.text_area(f"Definition for {word_data['Word']}", word_data['Definition'], key=f"def_{i}")
+        new_ex = st.text_area(f"Example for {word_data['Word']}", word_data['Example Sentence'], key=f"ex_{i}")
+        st.session_state.word_history[i]['Definition'] = new_def
+        st.session_state.word_history[i]['Example Sentence'] = new_ex
+
+    # Download buttons
+    df_history = pd.DataFrame(st.session_state.word_history)
+    df_history["Audio URL"] = df_history["Audio URL"].apply(
+        lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
+    )
+    st.markdown(df_history.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+    st.download_button(
+        label="Download History as CSV",
+        data=pd.DataFrame(st.session_state.word_history).to_csv(index=False),
+        file_name='vocabulary_history.csv',
+        mime='text/csv'
+    )
+
+    word_doc = create_word_document(pd.DataFrame(st.session_state.word_history))
+    st.download_button(
+        label="Download History as Word Document",
+        data=word_doc,
+        file_name='vocabulary_history.docx',
+        mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+
+    if st.button("Clear Word History"):
+        st.session_state.word_history = []
+        st.success("🧹 Word history cleared.")
