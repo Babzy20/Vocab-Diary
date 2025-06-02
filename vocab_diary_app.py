@@ -20,9 +20,9 @@ def fetch_word_details(word):
     if response.status_code != 200:
         return {
             "Word": word,
-            "Definition": f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
-            "Example Sentence": f'No example available. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
-            "IPA": f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
+            "Definition": f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>',
+            "Example Sentence": f'No example available. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>',
+            "IPA": f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>',
             "Audio URL": ""
         }
 
