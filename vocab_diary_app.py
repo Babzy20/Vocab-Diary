@@ -59,13 +59,13 @@ def create_word_document(df, include_definition, include_example, include_ipa, i
 
     for index, row in df.iterrows():
         doc.add_heading(row['Word'], level=1)
-        if include_definition and "Definition" in row:
+        if include_definition:
             doc.add_paragraph(f"Definition: {row['Definition']}")
-        if include_example and "Example Sentence" in row:
+        if include_example:
             doc.add_paragraph(f"Example Sentence: {row['Example Sentence']}")
-        if include_ipa and "IPA" in row:
+        if include_ipa:
             doc.add_paragraph(f"IPA: {row['IPA']}")
-        if include_audio and "Audio URL" in row and row['Audio URL']:
+        if include_audio and row['Audio URL']:
             doc.add_paragraph(f"Audio URL: {row['Audio URL']}")
         if "Personal Definition" in row and row["Personal Definition"]:
             doc.add_paragraph(f"My Personal Definition: {row['Personal Definition']}")
@@ -167,7 +167,7 @@ if "word_history" in st.session_state and st.session_state.word_history:
         df_history["Audio URL"] = df_history["Audio URL"].apply(
             lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
         )
-
+    
     st.markdown(df_history.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     st.download_button(
