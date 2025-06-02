@@ -12,7 +12,7 @@ def save_to_gsheet(word, definition, example, ipa, audio_url):
     row = [word, definition, example, ipa, audio_url, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
     sheet.append_row(row)
 
-        return word_info
+    return word_info
     else:
         return None
 
