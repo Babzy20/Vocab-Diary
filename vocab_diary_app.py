@@ -64,14 +64,18 @@ def create_word_document(df):
     byte_io.seek(0)
     return byte_io
 
-words_input = st.text_area("Enter words (comma, space, or newline separated):")
+words_input = st.text_area("Enter words (comma, space, or new line separated):")
+
+@st.cache_data
+def fetch_word_details_cached(word):
+    return fetch_word_details(word)
 
 if st.button("Fetch Word Details"):
     words = [word.strip() for word in words_input.replace(',', ' ').split()]
     word_details = []
 
     for word in words:
-        details = fetch_word_details(word)
+        details = fetch_word_details_cached(word)
         if details:
             word_details.append(details)
 
