@@ -1,3 +1,6 @@
+import streamlit as st
+
+st.write("Secrets loaded:", "gcp_service_account" in st.secrets)
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
