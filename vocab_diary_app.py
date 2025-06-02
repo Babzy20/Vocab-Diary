@@ -14,16 +14,30 @@ def fetch_word_details(word):
     response = requests.get(url)
 
     if response.status_code != 200:
-        return None
+        return {
+            "Word": word,
+            "Definition": "Definition not found.",
+            "Example Sentence": "No example available.",
+            "IPA": "IPA not found.",
+            "Audio URL": ""
+        }
 
-    data = response.json()[0]
-
-    definition = data["meanings"][0]["definitions"][0].get("definition", "Definition not found.")
-    example = data["meanings"][0]["definitions"][0].get("example", "No example available.")
-    ipa = data.get("phonetic", "")
-    if not ipa:
-        ipa = next((p.get("text", "") for p in data.get("phonetics", []) if "text" in p), "IPA not found.")
-    audio_url = next((p.get("audio", "") for p in data.get("phonetics", []) if "audio" in p and p["audio"]), "")
+    try:
+        data = response.json()[0]
+        definition = data["meanings"][0]["definitions"][0].get("definition", "Definition not found.")
+        example = data["meanings"][0]["definitions"][0].get("example", "No example available.")
+        ipa = data.get("phonetic", "")
+        if not ipa:
+            ipa = next((p.get("text", "") for p in data.get("phonetics", []) if "text" in p), "IPA not found.")
+        audio_url = next((p.get("audio", "") for p in data.get("phonetics", []) if "audio" in p and p["audio"]), "")
+    except Exception:
+        return {
+            "Word": word,
+            "Definition": "Definition not found.",
+            "Example Sentence": "No example available.",
+            "IPA": "IPA not found.",
+            "Audio URL": ""
+        }
 
     return {
         "Word": word,
