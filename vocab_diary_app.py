@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import requests
-from docx import Document
-from io import BytesIO
 
 # Enable wide layout
 st.set_page_config(layout="wide")
@@ -33,23 +31,6 @@ def fetch_word_details(word):
         "Audio URL": audio_url
     }
 
-def create_word_document(df):
-    doc = Document()
-    doc.add_heading('Vocabulary Diary', 0)
-
-    for index, row in df.iterrows():
-        doc.add_heading(row['Word'], level=1)
-        doc.add_paragraph(f"Definition: {row['Definition']}")
-        doc.add_paragraph(f"Example Sentence: {row['Example Sentence']}")
-        doc.add_paragraph(f"IPA: {row['IPA']}")
-        if row['Audio URL']:
-            doc.add_paragraph(f"Audio URL: {row['Audio URL']}")
-
-    byte_io = BytesIO()
-    doc.save(byte_io)
-    byte_io.seek(0)
-    return byte_io
-
 words_input = st.text_area("Enter words (comma, space, or newline separated):")
 
 if st.button("Fetch Word Details"):
@@ -79,15 +60,6 @@ if st.button("Fetch Word Details"):
             data=pd.DataFrame(word_details).to_csv(index=False),
             file_name='vocabulary_diary.csv',
             mime='text/csv'
-        )
-
-        # Word document download button
-        word_doc = create_word_document(pd.DataFrame(word_details))
-        st.download_button(
-            label="Download as Word Document",
-            data=word_doc,
-            file_name='vocabulary_diary.docx',
-            mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
     else:
         st.warning("⚠️ No word details found. Please check your input.")
