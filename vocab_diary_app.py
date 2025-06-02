@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 from io import BytesIO
 
-st.set_page_config(layout="wide")  
+st.set_page_config(layout="wide")
 
 st.title("Vocabulary Diary")
 
