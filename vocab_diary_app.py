@@ -15,32 +15,44 @@ if "word_history" not in st.session_state:
 def fetch_word_details(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     response = requests.get(url)
+    dictionary_link = f"https://www.lexico.com/en/definition/{word}"
 
     if response.status_code != 200:
         return {
             "Word": word,
-            "Definition": "Definition not found.",
-            "Example Sentence": "No example available.",
-            "IPA": "IPA not found.",
+            "Definition": f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
+            "Example Sentence": f'No example available. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
+            "IPA": f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
             "Audio URL": ""
         }
 
     try:
         data = response.json()[0]
-        definition = data["meanings"][0]["definitions"][0].get("definition", "Definition not found.")
-        example = data["meanings"][0]["definitions"][0].get("example", "No example available.")
+        definition = data["meanings"][0]["definitions"][0].get("definition", f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>')
+        example = data["meanings"][0]["definitions"][0].get("example", f'No example available. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>')
         ipa = data.get("phonetic", "")
         if not ipa:
-            ipa = next((p.get("text", "") for p in data.get("phonetics", []) if "text" in p), "IPA not found.")
+            ipa = next((p.get("text", "") for p in data.get("phonetics", []) if "text" in p), "")
+            if not ipa:
+                ipa = f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>'
         audio_url = next((p.get("audio", "") for p in data.get("phonetics", []) if "audio" in p and p["audio"]), "")
     except Exception:
         return {
             "Word": word,
-            "Definition": "Definition not found.",
-            "Example Sentence": "No example available.",
-            "IPA": "IPA not found.",
+            "Definition": f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
+            "Example Sentence": f'No example available. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
+            "IPA": f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
             "Audio URL": ""
         }
+
+    return {
+        "Word": word,
+        "Definition": definition,
+        "Example Sentence": example,
+        "IPA": ipa,
+        "Audio URL": audio_url
+    }
+
 
     return {
         "Word": word,
