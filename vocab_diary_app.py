@@ -44,13 +44,20 @@ if st.button("Fetch Word Details"):
 
     if word_details:
         df = pd.DataFrame(word_details)
-        st.write(df)
+
+        # Make audio links clickable
+        df["Audio URL"] = df["Audio URL"].apply(
+            lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
+        )
+
+        # Display the table with clickable links
+        st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("✅ Words fetched successfully!")
 
         # CSV download button
         st.download_button(
             label="Download as CSV",
-            data=df.to_csv(index=False),
+            data=pd.DataFrame(word_details).to_csv(index=False),
             file_name='vocabulary_diary.csv',
             mime='text/csv'
         )
