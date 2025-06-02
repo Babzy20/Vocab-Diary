@@ -77,7 +77,7 @@ def create_word_document(df, include_definition, include_example, include_ipa, i
 def fetch_word_details_cached(word):
     return fetch_word_details(word)
 
-# Sidebar for toggling sections
+# Sidebar for toggle options
 st.sidebar.title("Settings")
 include_definition = st.sidebar.checkbox("Include Definition", value=True)
 include_example = st.sidebar.checkbox("Include Example Sentence", value=True)
@@ -100,12 +100,24 @@ if st.button("Fetch Word Details"):
     if word_details:
         df = pd.DataFrame(word_details)
         
-        # Make audio links clickable
-        df["Audio URL"] = df["Audio URL"].apply(
-            lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
-        )
+        # Filter columns based on sidebar settings
+        columns_to_include = ["Word"]
+        if include_definition:
+            columns_to_include.append("Definition")
+        if include_example:
+            columns_to_include.append("Example Sentence")
+        if include_ipa:
+            columns_to_include.append("IPA")
+        if include_audio:
+            columns_to_include.append("Audio URL")
+        
+        df = df[columns_to_include]
 
-        # Display the table with clickable links
+        if include_audio:
+            df["Audio URL"] = df["Audio URL"].apply(
+                lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
+            )
+
         st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("✅ Words fetched successfully!")
 
@@ -121,12 +133,31 @@ if st.session_state.word_history:
         if include_example:
             new_ex = st.text_area(f"Example for {word_data['Word']}", word_data['Example Sentence'], key=f"ex_{i}")
             st.session_state.word_history[i]['Example Sentence'] = new_ex
+        if include_ipa:
+            new_ipa = st.text_area(f"IPA for {word_data['Word']}", word_data['IPA'], key=f"ipa_{i}")
+            st.session_state.word_history[i]['IPA'] = new_ipa
 
     # Download buttons
     df_history = pd.DataFrame(st.session_state.word_history)
-    df_history["Audio URL"] = df_history["Audio URL"].apply(
-        lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
-    )
+    
+    # Filter columns based on sidebar settings
+    columns_to_include = ["Word"]
+    if include_definition:
+        columns_to_include.append("Definition")
+    if include_example:
+        columns_to_include.append("Example Sentence")
+    if include_ipa:
+        columns_to_include.append("IPA")
+    if include_audio:
+        columns_to_include.append("Audio URL")
+    
+    df_history = df_history[columns_to_include]
+
+    if include_audio:
+        df_history["Audio URL"] = df_history["Audio URL"].apply(
+            lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
+        )
+    
     st.markdown(df_history.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     st.download_button(
