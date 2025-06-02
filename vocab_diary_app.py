@@ -28,31 +28,22 @@ def fetch_word_details(word):
 
     try:
         data = response.json()[0]
-        definition = data["meanings"][0]["definitions"][0].get("definition", f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>')
-        example = data["meanings"][0]["definitions"][0].get("example", f'No example available. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>')
+        definition = data["meanings"][0]["definitions"][0].get("definition", f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>')
+        example = data["meanings"][0]["definitions"][0].get("example", f'No example available. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>')
         ipa = data.get("phonetic", "")
         if not ipa:
             ipa = next((p.get("text", "") for p in data.get("phonetics", []) if "text" in p), "")
             if not ipa:
-                ipa = f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>'
+                ipa = f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>'
         audio_url = next((p.get("audio", "") for p in data.get("phonetics", []) if "audio" in p and p["audio"]), "")
     except Exception:
         return {
             "Word": word,
-            "Definition": f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
-            "Example Sentence": f'No example available. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
-            "IPA": f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Lexico</a>',
+            "Definition": f'Definition not found. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>',
+            "Example Sentence": f'No example available. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>',
+            "IPA": f'IPA not found. <a href="{dictionary_link}" target="_blank">Search on Merriam-Webster</a>',
             "Audio URL": ""
         }
-
-    return {
-        "Word": word,
-        "Definition": definition,
-        "Example Sentence": example,
-        "IPA": ipa,
-        "Audio URL": audio_url
-    }
-
 
     return {
         "Word": word,
@@ -140,3 +131,4 @@ if st.session_state.word_history:
     if st.button("Clear Word History"):
         st.session_state.word_history = []
         st.success("🧹 Word history cleared.")
+
