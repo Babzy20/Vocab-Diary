@@ -53,7 +53,7 @@ def fetch_word_details(word):
         "Audio URL": audio_url
     }
 
-def create_word_document(df, include_definition, include_example, include_ipa, include_audio):
+def create_word_document(df, include_definition, include_example, include_ipa, include_audio, include_personal_def):
     doc = Document()
     doc.add_heading('Vocabulary Diary', 0)
 
@@ -67,7 +67,7 @@ def create_word_document(df, include_definition, include_example, include_ipa, i
             doc.add_paragraph(f"IPA: {row['IPA']}")
         if include_audio and row['Audio URL']:
             doc.add_paragraph(f"Audio URL: {row['Audio URL']}")
-        if "Personal Definition" in row and row["Personal Definition"]:
+        if include_personal_def and "Personal Definition" in row and row["Personal Definition"]:
             doc.add_paragraph(f"My Personal Definition: {row['Personal Definition']}")
 
     byte_io = BytesIO()
@@ -85,6 +85,7 @@ include_definition = st.sidebar.checkbox("Include Definition", value=True)
 include_example = st.sidebar.checkbox("Include Example Sentence", value=True)
 include_ipa = st.sidebar.checkbox("Include IPA", value=True)
 include_audio = st.sidebar.checkbox("Include Audio URL", value=True)
+include_personal_def = st.sidebar.checkbox("Include My Personal Definition", value=False)
 
 # Input area
 words_input = st.text_area("Enter words (comma, space, or new line separated):")
@@ -112,6 +113,8 @@ if st.button("Fetch Word Details"):
             columns_to_include.append("IPA")
         if include_audio:
             columns_to_include.append("Audio URL")
+        if include_personal_def:
+            columns_to_include.append("Personal Definition")
         
         df = df[columns_to_include]
 
@@ -140,10 +143,11 @@ if "word_history" in st.session_state and st.session_state.word_history:
             st.session_state.word_history[i]['IPA'] = new_ipa
 
         # New: Personal Definition section
-        with st.expander("My Personal Definition", expanded=False):
-            personal_def_key = f"personal_def_{i}"
-            personal_def = st.text_area("Write your own definition:", word_data.get("Personal Definition", ""), key=personal_def_key)
-            st.session_state.word_history[i]["Personal Definition"] = personal_def
+        if include_personal_def:
+            with st.expander("My Personal Definition", expanded=False):
+                personal_def_key = f"personal_def_{i}"
+                personal_def = st.text_area("Write your own definition:", word_data.get("Personal Definition", ""), key=personal_def_key)
+                st.session_state.word_history[i]["Personal Definition"] = personal_def
 
     # Prepare DataFrame for download
     df_history = pd.DataFrame(st.session_state.word_history)
@@ -158,7 +162,7 @@ if "word_history" in st.session_state and st.session_state.word_history:
         columns_to_include.append("IPA")
     if include_audio:
         columns_to_include.append("Audio URL")
-    if any("Personal Definition" in word for word in st.session_state.word_history):
+    if include_personal_def:
         columns_to_include.append("Personal Definition")
 
     df_history = df_history[columns_to_include]
@@ -167,7 +171,7 @@ if "word_history" in st.session_state and st.session_state.word_history:
         df_history["Audio URL"] = df_history["Audio URL"].apply(
             lambda url: f'<a href="{url}" target="_blank">🔊 Listen</a>' if url else "No audio"
         )
-    
+
     st.markdown(df_history.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     st.download_button(
@@ -177,7 +181,7 @@ if "word_history" in st.session_state and st.session_state.word_history:
         mime='text/csv'
     )
 
-    word_doc = create_word_document(df_history, include_definition, include_example, include_ipa, include_audio)
+    word_doc = create_word_document(df_history, include_definition, include_example, include_ipa, include_audio, include_personal_def)
     st.download_button(
         label="Download History as Word Document",
         data=word_doc,
