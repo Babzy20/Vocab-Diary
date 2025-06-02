@@ -1,19 +1,17 @@
-
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 import streamlit as st
-import pandas as pd
-import requests
 
-def fetch_word_details(word):
-    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        word_info = {
-            "Word": word,
-            "Part of Speech": data[0]['meanings'][0]['partOfSpeech'],
-            "Pronunciation": data[0]['phonetics'][0]['text'] if data[0]['phonetics'] else '',
-            "Audio Link": data[0]['phonetics'][0]['audio'] if data[0]['phonetics'] else '',
-        }
+def save_to_gsheet(word, definition, example, ipa, audio_url):
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
+    client = gspread.authorize(creds)
+
+    sheet = client.open("Vocab Diary").sheet1
+    row = [word, definition, example, ipa, audio_url, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+    sheet.append_row(row)
+
         return word_info
     else:
         return None
@@ -23,6 +21,8 @@ st.title("Vocabulary Diary")
 words_input = st.text_area("Enter words (comma, space, or newline separated):")
 
 if st.button("Fetch Word Details"):
+    save_to_gsheet(word, definition, example_sentence, ipa, audio_url)
+    st.success("✅ Word saved to your Vocab Diary!")
     words = [word.strip() for word in words_input.replace(',', ' ').split()]
     word_details = [fetch_word_details(word) for word in words if fetch_word_details(word)]
 
@@ -31,3 +31,4 @@ if st.button("Fetch Word Details"):
         st.write(df)
     else:
         st.write("No word details found.")
+Add Google Sheets integration
