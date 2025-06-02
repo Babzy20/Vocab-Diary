@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
-from io import BytesIO
 
+# Enable wide layout
 st.set_page_config(layout="wide")
 
 st.title("Vocabulary Diary")
@@ -47,18 +47,12 @@ if st.button("Fetch Word Details"):
         st.write(df)
         st.success("✅ Words fetched successfully!")
 
-        # Create Excel file in memory
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Vocabulary')
-            writer.save()
-            processed_data = output.getvalue()
-
+        # CSV download button
         st.download_button(
-            label="Download as Excel",
-            data=processed_data,
-            file_name='vocabulary_diary.xlsx',
-            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            label="Download as CSV",
+            data=df.to_csv(index=False),
+            file_name='vocabulary_diary.csv',
+            mime='text/csv'
         )
     else:
         st.warning("⚠️ No word details found. Please check your input.")
